@@ -56,6 +56,7 @@ public class SocketThread extends Thread {
 			System.out.println("host=" + host + ",port=" + port);
 			if (port > 0 && port < 65535) {
 				socketOut = new Socket(host, port);
+				socketOut.setSoTimeout(SocketProxy.SO_TIMEOUT);
 			} else {
 				return;
 			}

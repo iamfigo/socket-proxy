@@ -11,6 +11,7 @@ import java.util.Set;
  *
  */
 public class SocketProxy {
+	public static final int SO_TIMEOUT = 10;
 	public static boolean debug = false;
 	public static Set<String> allowInsideIp;
 	public static Set<String> allowOutsideIp;
@@ -43,8 +44,8 @@ public class SocketProxy {
 					System.out.println("allowOutsideIp->" + allowOutsideIp);
 				}
 			} else {
-				System.out
-						.println("java -jar socket-proxy.jar port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31");
+				System.out.print("java -jar socket-proxy.jar ");
+				System.out.println("port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31");
 			}
 
 		}
@@ -55,6 +56,7 @@ public class SocketProxy {
 			Socket socket = null;
 			try {
 				socket = serverSocket.accept();
+				socket.setSoTimeout(SO_TIMEOUT);
 				String hostPort = null;
 				if (null != SocketProxy.allowOutsideIp) {
 					hostPort = socket.getRemoteSocketAddress().toString().substring(1);
@@ -72,7 +74,6 @@ public class SocketProxy {
 						continue;
 					}
 				}
-				socket.setSoTimeout(30);
 				new SocketThread(socket, hostPort).start();
 			} catch (Exception e) {
 				e.printStackTrace();
