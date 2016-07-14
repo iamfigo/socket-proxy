@@ -42,6 +42,9 @@ public class SocketProxy {
 					}
 					System.out.println("allowOutsideIp->" + allowOutsideIp);
 				}
+			} else {
+				System.out
+						.println("java -jar socket-proxy.jar port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31");
 			}
 
 		}
