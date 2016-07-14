@@ -6,12 +6,15 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * java -jar socket-proxy.jar port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31
+ * 106.3.131.68:2002 线上代理
+ * 10.0.108.12:8999 社区API
+ * 10.0.204.51:8999 直播API
+ * java -jar socket-proxy.jar port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31 so=30
  * @author huit
  *
  */
 public class SocketProxy {
-	public static final int SO_TIMEOUT = 10;
+	public static int SO_TIMEOUT = 30;
 	public static boolean debug = false;
 	public static Set<String> allowInsideIp;
 	public static Set<String> allowOutsideIp;
@@ -25,6 +28,9 @@ public class SocketProxy {
 			} else if (arg.startsWith("debug=")) {
 				debug = Boolean.valueOf(arg.split("=")[1]);
 				System.out.println("print->" + debug);
+			} else if (arg.startsWith("so=")) {
+				SO_TIMEOUT = Integer.valueOf(arg.split("=")[1]);
+				System.out.println("so->" + SO_TIMEOUT);
 			} else if (arg.startsWith("allowInsideIp=")) {
 				String whiteList = arg.split("=")[1];
 				if (null != whiteList && whiteList.length() > 0) {
@@ -45,7 +51,7 @@ public class SocketProxy {
 				}
 			} else {
 				System.out.print("java -jar socket-proxy.jar ");
-				System.out.println("port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31");
+				System.out.println("port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31 so=10");
 			}
 
 		}

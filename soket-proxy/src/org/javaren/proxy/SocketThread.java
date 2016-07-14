@@ -76,7 +76,10 @@ public class SocketThread extends Thread {
 			out.join();
 			in.join();
 		} catch (Exception e) {
-			System.out.println("a client leave");
+			if (SocketProxy.debug) {
+				e.printStackTrace();
+				System.out.println("a client leave");
+			}
 		} finally {
 			try {
 				if (socketIn != null) {
