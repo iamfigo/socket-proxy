@@ -10,9 +10,10 @@ public class SocketThreadInput extends Thread {
 	private InputStream isOut;
 	private OutputStream osIn;
 
-	public SocketThreadInput(InputStream isOut, OutputStream osIn) {
+	public SocketThreadInput(InputStream isOut, OutputStream osIn, String name) {
 		this.isOut = isOut;
 		this.osIn = osIn;
+		this.setName(name);
 	}
 
 	private byte[] buffer = new byte[409600];
@@ -22,7 +23,7 @@ public class SocketThreadInput extends Thread {
 			int len;
 			while ((len = isOut.read(buffer)) != -1) {
 				if (len > 0) {
-					if (SocketProxy.isPrint) {
+					if (SocketProxy.debug) {
 						System.out.println(new String(buffer, 0, len));
 					}
 					osIn.write(buffer, 0, len);

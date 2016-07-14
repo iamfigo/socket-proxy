@@ -13,9 +13,12 @@ public class SocketThread extends Thread {
 	private Socket socketOut;
 	private InputStream isOut;
 	private OutputStream osOut;
+	private String hostPort;
 
-	public SocketThread(Socket socket) {
+	public SocketThread(Socket socket, String hostPort) {
 		this.socketIn = socket;
+		this.hostPort = hostPort;
+		this.setName(hostPort);
 	}
 
 	private byte[] buffer = new byte[4096];
@@ -36,6 +39,19 @@ public class SocketThread extends Thread {
 			System.out.println("< " + bytesToHexString(buffer, 0, len));
 			// 查找主机和端口
 			String host = findHost(buffer, 4, 7);
+			if (null != SocketProxy.allowInsideIp) {
+				boolean isAllow = false;
+				for (String allowIp : SocketProxy.allowInsideIp) {
+					if (host.startsWith(allowIp)) {
+						isAllow = true;
+					}
+				}
+				if (!isAllow) {
+					System.out.println("insideNotAllowConect:" + host);
+					socketIn.close();
+					return;
+				}
+			}
 			int port = findPort(buffer, 8, 9);
 			System.out.println("host=" + host + ",port=" + port);
 			if (port > 0 && port < 65535) {
@@ -52,9 +68,9 @@ public class SocketThread extends Thread {
 			osIn.write(CONNECT_OK);
 			osIn.flush();
 			System.out.println("> " + bytesToHexString(CONNECT_OK, 0, CONNECT_OK.length));
-			SocketThreadOutput out = new SocketThreadOutput(isIn, osOut);
+			SocketThreadOutput out = new SocketThreadOutput(isIn, osOut, hostPort + "-out");
 			out.start();
-			SocketThreadInput in = new SocketThreadInput(isOut, osIn);
+			SocketThreadInput in = new SocketThreadInput(isOut, osIn, hostPort + "-in");
 			in.start();
 			out.join();
 			in.join();
