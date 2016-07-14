@@ -24,13 +24,10 @@ public class SocketProxy {
 		for (String arg : args) {
 			if (arg.startsWith("port=")) {
 				port = arg.split("=")[1];
-				System.out.println("port->" + port);
 			} else if (arg.startsWith("debug=")) {
 				debug = Boolean.valueOf(arg.split("=")[1]);
-				System.out.println("print->" + debug);
 			} else if (arg.startsWith("so=")) {
 				SO_TIMEOUT = Integer.valueOf(arg.split("=")[1]);
-				System.out.println("so->" + SO_TIMEOUT);
 			} else if (arg.startsWith("allowInsideIp=")) {
 				String whiteList = arg.split("=")[1];
 				if (null != whiteList && whiteList.length() > 0) {
@@ -38,7 +35,6 @@ public class SocketProxy {
 					for (String uid : whiteList.split(",")) {
 						allowInsideIp.add(uid);
 					}
-					System.out.println("allowInsideIp->" + allowInsideIp);
 				}
 			} else if (arg.startsWith("allowOutsideIp=")) {
 				String whiteList = arg.split("=")[1];
@@ -47,15 +43,16 @@ public class SocketProxy {
 					for (String uid : whiteList.split(",")) {
 						allowOutsideIp.add(uid);
 					}
-					System.out.println("allowOutsideIp->" + allowOutsideIp);
 				}
 			} else {
 				System.out.print("java -jar socket-proxy.jar ");
 				System.out.println("port=2001 debug=true allowInsideIp=172.20.16.22 allowOutsideIp=172.20.16.31 so=10");
 			}
-
 		}
 		int portInt = Integer.valueOf(port);
+
+		System.out.println("serverStart->port=" + port + " debug=" + debug + " allowInsideIp=" + allowInsideIp
+				+ " allowOutsideIp=" + allowOutsideIp);
 		@SuppressWarnings("resource")
 		ServerSocket serverSocket = new ServerSocket(portInt);
 		while (true) {
