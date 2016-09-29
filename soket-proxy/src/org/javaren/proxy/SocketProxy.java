@@ -60,9 +60,8 @@ public class SocketProxy {
 			try {
 				socket = serverSocket.accept();
 				socket.setSoTimeout(SO_TIMEOUT);
-				String hostPort = null;
+				String hostPort = socket.getRemoteSocketAddress().toString().substring(1);
 				if (null != SocketProxy.allowOutsideIp) {
-					hostPort = socket.getRemoteSocketAddress().toString().substring(1);
 					boolean isAllow = false;
 					for (String allowIp : SocketProxy.allowOutsideIp) {
 						if (hostPort.startsWith(allowIp)) {

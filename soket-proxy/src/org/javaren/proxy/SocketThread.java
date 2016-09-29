@@ -24,7 +24,18 @@ public class SocketThread extends Thread {
 	private byte[] buffer = new byte[4096];
 	private static final byte[] VER = { 0x5, 0x0 };
 	private static final byte[] CONNECT_OK = { 0x5, 0x0, 0x0, 0x1, 0, 0, 0, 0, 0, 0 };
+/**
 
+< 05 01 00 
+> 05 00 
+< 05 01 00 01 65 E2 67 70 00 50 
+ host=101.226.103.112,port=80
+ 
+< 05 01 00 
+> 05 00 
+< 05 01 00 03 0B 71 74 2E 67 74 69 6D 67 2E 63 6E 00 50 
+ *
+ */
 	public void run() {
 		try {
 			System.out.println("\n\na client connect " + socketIn.getInetAddress() + ":" + socketIn.getPort());
@@ -38,6 +49,12 @@ public class SocketThread extends Thread {
 			len = isIn.read(buffer);
 			System.out.println("< " + bytesToHexString(buffer, 0, len));
 			// 查找主机和端口
+			
+			byte[] dest = new byte[buffer.length-5]; 
+			System.arraycopy(buffer, 5, dest, 0, buffer.length);
+			String test = new String(dest);
+			System.out.println(test);
+			
 			String host = findHost(buffer, 4, 7);
 			if (null != SocketProxy.allowInsideIp) {
 				boolean isAllow = false;
@@ -96,7 +113,7 @@ public class SocketThread extends Thread {
 		StringBuffer sb = new StringBuffer();
 		for (int i = begin; i <= end; i++) {
 			sb.append(Integer.toString(0xFF & bArray[i]));
-			sb.append(".");
+			sb.append(".");		
 		}
 		sb.deleteCharAt(sb.length() - 1);
 		return sb.toString();
