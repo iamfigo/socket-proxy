@@ -1,5 +1,6 @@
 package http;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -9,13 +10,15 @@ import java.util.List;
  * 解析头部信息
  *
  */
-public final class HttpHeader {
+public final class HttpRequest {
 
 	private List<String> header=new ArrayList<String>();
 	
 	private String method;
 	private String host;
 	private String port;
+	public ByteArrayOutputStream response = new ByteArrayOutputStream();
+	public ByteArrayOutputStream request = new ByteArrayOutputStream();
 	
 	public static final int MAXLINESIZE = 4096;
 	
@@ -23,7 +26,7 @@ public final class HttpHeader {
 	public static final String METHOD_POST="POST";
 	public static final String METHOD_CONNECT="CONNECT";
 	
-	private HttpHeader(){}
+	private HttpRequest(){}
 	
 	/**
 	 * 从数据流中读取请求头部信息，必须在放在流开启之后，任何数据读取之前
@@ -31,8 +34,8 @@ public final class HttpHeader {
 	 * @return
 	 * @throws IOException
 	 */
-	public static final HttpHeader readHeader(InputStream in) throws IOException {
-		HttpHeader header = new HttpHeader();
+	public static final HttpRequest readHeader(InputStream in) throws IOException {
+		HttpRequest header = new HttpRequest();
 		StringBuilder sb = new StringBuilder();
 		//先读出交互协议来，
 		char c = 0;

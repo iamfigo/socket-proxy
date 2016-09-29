@@ -34,53 +34,60 @@ public class ProxyTask implements Runnable {
 	public void run() {
 		
 		StringBuilder builder=new StringBuilder();
+		boolean isLog = false;
+		HttpRequest request = null;
 		try {
 			builder.append("\r\n").append("Request Time  ：" + sdf.format(new Date()));
 			
 			InputStream isIn = socketIn.getInputStream();
 			OutputStream osIn = socketIn.getOutputStream();
 			//从客户端流数据中读取头部，获得请求主机和端口
-			HttpHeader header = HttpHeader.readHeader(isIn);
+			request = HttpRequest.readHeader(isIn);
 			
 			//添加请求日志信息
 			builder.append("\r\n").append("From    Host  ：" + socketIn.getInetAddress());
 			builder.append("\r\n").append("From    Port  ：" + socketIn.getPort());
-			builder.append("\r\n").append("Proxy   Method：" + header.getMethod());
-			builder.append("\r\n").append("Request Host  ：" + header.getHost());
-			builder.append("\r\n").append("Request Port  ：" + header.getPort());
+			builder.append("\r\n").append("Proxy   Method：" + request.getMethod());
+			builder.append("\r\n").append("Request Host  ：" + request.getHost());
+			builder.append("\r\n").append("Request Port  ：" + request.getPort());
+			
+			
+			if(request.getHost().contains("show")){
+				isLog = true;
+			}
 			
 			//如果没解析出请求请求地址和端口，则返回错误信息
-			if (header.getHost() == null || header.getPort() == null) {
+			if (request.getHost() == null || request.getPort() == null) {
 				osIn.write(SERVERERROR.getBytes());
 				osIn.flush();
 				return ;
 			}
 			
 			// 查找主机和端口
-			socketOut = new Socket(header.getHost(), Integer.parseInt(header.getPort()));
+			socketOut = new Socket(request.getHost(), Integer.parseInt(request.getPort()));
 			socketOut.setKeepAlive(true);
 			InputStream isOut = socketOut.getInputStream();
 			OutputStream osOut = socketOut.getOutputStream();
 			//新开一个线程将返回的数据转发给客户端,串行会出问题，尚没搞明白原因
-			Thread ot = new DataSendThread(isOut, osIn);
+			Thread ot = new DataSendThread(isOut, osIn,request);
 			ot.start();
-			if (header.getMethod().equals(HttpHeader.METHOD_CONNECT)) {
+			if (request.getMethod().equals(HttpRequest.METHOD_CONNECT)) {
 				// 将已联通信号返回给请求页面
 				osIn.write(AUTHORED.getBytes());
 				osIn.flush();
 			}else{
 				//http请求需要将请求头部也转发出去
-				byte[] headerData=header.toString().getBytes();
+				byte[] headerData=request.toString().getBytes();
 				totalUpload+=headerData.length;
 				osOut.write(headerData);
 				osOut.flush();
 			}
 			//读取客户端请求过来的数据转发给服务器
-			readForwardDate(isIn, osOut);
+			readForwardDate(isIn, osOut,isLog);
 			//等待向客户端转发的线程结束
 			ot.join();
 		} catch (Exception e) {
-			e.printStackTrace();
+			//e.printStackTrace();
 			if(!socketIn.isOutputShutdown()){
 				//如果还可以返回错误状态的话，返回内部错误
 				try {
@@ -102,8 +109,11 @@ public class ProxyTask implements Runnable {
 			builder.append("\r\n").append("Up    Bytes  ：" + totalUpload);
 			builder.append("\r\n").append("Down  Bytes  ：" + totalDownload);
 			builder.append("\r\n").append("Closed Time  ：" + sdf.format(new Date()));
+			builder.append("\r\n").append("header       ：" + request);
 			builder.append("\r\n");
-			logRequestMsg(builder.toString());
+			if(isLog){
+				logRequestMsg(builder.toString());
+			}
 		}	
 	}
 	
@@ -120,8 +130,9 @@ public class ProxyTask implements Runnable {
 	 * 
 	 * @param isIn
 	 * @param osOut
+	 * @param isLog 
 	 */
-	private void readForwardDate(InputStream isIn, OutputStream osOut) {
+	private void readForwardDate(InputStream isIn, OutputStream osOut, boolean isLog) {
 		byte[] buffer = new byte[4096];
 		try {
 			int len;
@@ -151,10 +162,12 @@ public class ProxyTask implements Runnable {
 	class DataSendThread extends Thread {
 		private InputStream isOut;
 		private OutputStream osIn;
+		private HttpRequest request;
 
-		DataSendThread(InputStream isOut, OutputStream osIn) {
+		DataSendThread(InputStream isOut, OutputStream osIn, HttpRequest request) {
 			this.isOut = isOut;
 			this.osIn = osIn;
+			this.request = request;
 		}
 
 		@Override
@@ -164,7 +177,7 @@ public class ProxyTask implements Runnable {
 				int len;
 				while ((len = isOut.read(buffer)) != -1) {
 					if (len > 0) {
-						//logData(buffer, 0, len);
+						request.response.write(buffer, 0, len);
 						osIn.write(buffer, 0, len);
 						osIn.flush();
 						totalDownload+=len;
