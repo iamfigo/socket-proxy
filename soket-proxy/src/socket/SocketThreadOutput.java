@@ -1,4 +1,4 @@
-package org.javaren.proxy;
+package socket;
 
 import java.io.InputStream;
 import java.io.OutputStream;

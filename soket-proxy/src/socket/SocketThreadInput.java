@@ -1,4 +1,4 @@
-package org.javaren.proxy;
+package socket;
 
 /**
  * * 从外部读取，向内部发送信息

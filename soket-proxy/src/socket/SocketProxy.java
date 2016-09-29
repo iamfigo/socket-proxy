@@ -1,4 +1,4 @@
-package org.javaren.proxy;
+package socket;
 
 import java.net.ServerSocket;
 import java.net.Socket;
