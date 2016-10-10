@@ -12,22 +12,26 @@ import java.util.List;
  */
 public final class HttpRequest {
 
-	private List<String> header=new ArrayList<String>();
-	
+	private List<String> header = new ArrayList<String>();
+
 	private String method;
 	private String host;
 	private String port;
-	public ByteArrayOutputStream response = new ByteArrayOutputStream();
-	public ByteArrayOutputStream request = new ByteArrayOutputStream();
-	
+	private String url;
+	Integer contentLength;
+	public ByteArrayOutputStream requestData = new ByteArrayOutputStream();
+
 	public static final int MAXLINESIZE = 4096;
-	
-	public static final String METHOD_GET="GET";
-	public static final String METHOD_POST="POST";
-	public static final String METHOD_CONNECT="CONNECT";
-	
-	private HttpRequest(){}
-	
+
+	public static final String METHOD_GET = "GET";
+	public static final String METHOD_POST = "POST";
+	public static final String METHOD_CONNECT = "CONNECT";
+
+	public HttpResponse response;
+
+	HttpRequest() {
+	}
+
 	/**
 	 * 从数据流中读取请求头部信息，必须在放在流开启之后，任何数据读取之前
 	 * @param in
@@ -46,7 +50,7 @@ public final class HttpRequest {
 			}
 		}
 		//如能识别出请求方式则则继续，不能则退出
-		if(header.addHeaderMethod(sb.toString())!=null){
+		if (header.addHeaderMethod(sb.toString()) != null) {
 			do {
 				sb = new StringBuilder();
 				while ((c = (char) in.read()) != '\n') {
@@ -62,76 +66,75 @@ public final class HttpRequest {
 				}
 			} while (true);
 		}
-		
+
 		return header;
 	}
-	
+
 	/**
 	 * 
 	 * @param str
 	 */
-	private void addHeaderString(String str){
-		str=str.replaceAll("\r", "");
+	private void addHeaderString(String str) {
+		str = str.replaceAll("\r", "");
 		header.add(str);
-		if(str.startsWith("Host")){//解析主机和端口
-			String[] hosts= str.split(":");
-			host=hosts[1].trim();
-			if(method.endsWith(METHOD_CONNECT)){
-				port=hosts.length==3?hosts[2]:"443";//https默认端口为443
-			}else if(method.endsWith(METHOD_GET)||method.endsWith(METHOD_POST)){
-				port=hosts.length==3?hosts[2]:"80";//http默认端口为80
+		if (str.startsWith("Host")) {//解析主机和端口
+			String[] hosts = str.split(":");
+			host = hosts[1].trim();
+			if (method.endsWith(METHOD_CONNECT)) {
+				port = hosts.length == 3 ? hosts[2] : "443";//https默认端口为443
+			} else if (method.endsWith(METHOD_GET) || method.endsWith(METHOD_POST)) {
+				port = hosts.length == 3 ? hosts[2] : "80";//http默认端口为80
 			}
+		} else if (str.startsWith("Content-Length")) {
+			contentLength = Integer.valueOf(str.split(":")[1].trim());
 		}
 	}
-	
+
 	/**
 	 * 判定请求方式
 	 * @param str
 	 * @return
 	 */
-	private String addHeaderMethod(String str){
-		str=str.replaceAll("\r", "");
+	private String addHeaderMethod(String str) {
+		str = str.replaceAll("\r", "");
 		header.add(str);
-		if(str.startsWith(METHOD_CONNECT)){//https链接请求代理
-			method=METHOD_CONNECT;
-		}else if(str.startsWith(METHOD_GET)){//http GET请求
-			method=METHOD_GET;
-		}else if(str.startsWith(METHOD_POST)){//http POST请求
-			method=METHOD_POST;
+		if (str.startsWith(METHOD_CONNECT)) {//https链接请求代理
+			method = METHOD_CONNECT;
+		} else if (str.startsWith(METHOD_GET)) {//http GET请求
+			method = METHOD_GET;
+			url = str.split(" ")[1];
+		} else if (str.startsWith(METHOD_POST)) {//http POST请求
+			method = METHOD_POST;
+			url = str.split(" ")[1];
 		}
 		return method;
 	}
-	
-	
+
 	@Override
 	public String toString() {
-		StringBuilder sb=new StringBuilder();
-		for(String str : header){
+		StringBuilder sb = new StringBuilder();
+		for (String str : header) {
 			sb.append(str).append("\r\n");
 		}
 		sb.append("\r\n");
 		return sb.toString();
 	}
-	
-	public boolean notTooLong(){
-		return header.size()<=16;
-	}
 
+	public boolean notTooLong() {
+		return header.size() <= 16;
+	}
 
 	public List<String> getHeader() {
 		return header;
 	}
 
-
 	public void setHeader(List<String> header) {
 		this.header = header;
 	}
 
-
 	public String getMethod() {
 		return method;
 	}
-
 
 	public void setMethod(String method) {
 		this.method = method;
@@ -141,19 +144,24 @@ public final class HttpRequest {
 		return host;
 	}
 
-
 	public void setHost(String host) {
 		this.host = host;
 	}
-
 
 	public String getPort() {
 		return port;
 	}
 
-
 	public void setPort(String port) {
 		this.port = port;
 	}
-	
+
+	public String getUrl() {
+		return url;
+	}
+
+	public void setUrl(String url) {
+		this.url = url;
+	}
+
 }
